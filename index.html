@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#171a20">
+<meta name="description" content="App Master — configurateur PWA, tarifs France et Algérie, devis et impression.">
+<title>App Master — FR / DZ</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{--bg:#171a20;--panel:rgba(37,41,49,.84);--border:rgba(255,255,255,.09);--muted:#9ba3b1;--green:#6ee7b7;--blue:#7dd3fc}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 10% 0%,#343d4d55,transparent 35%),radial-gradient(ellipse at 95% 35%,#233e5550,transparent 35%),var(--bg);color:#eef1f6;font-family:Inter,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #7dd3fc;outline-offset:3px}
+.mono{font-family:"JetBrains Mono",monospace}
+.muted{color:var(--muted)}
+.glass{background:var(--panel);border:1px solid var(--border);box-shadow:0 12px 35px #0002,inset 0 1px #ffffff06;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.label{font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#aab3c1}
+.field{width:100%;min-width:0;min-height:44px;border:1px solid #ffffff18;background:#0003;color:#f1f5f9;border-radius:10px;padding:11px 12px;outline:none}
+.field:focus{border-color:#7dd3fc;box-shadow:0 0 0 2px #7dd3fc15}
+.field::placeholder{color:#717b89}
+select.field option{background:#20242b;color:white}
+.btn{min-height:44px;padding:11px 14px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:750;transition:.18s}
+.primary{background:#e0e6ef;color:#171a20}.primary:hover{background:#fff}
+.secondary{border:1px solid #ffffff20;background:#ffffff06;color:#edf1f7}.secondary:hover{background:#ffffff10}
+.blue{background:linear-gradient(110deg,#0ea5e9,#3b82f6);color:white}
+.country{border:1px solid #ffffff20;background:#ffffff06;color:#d6dce5;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;min-height:42px}
+.country.active{background:#dce8f4;color:#151b23;border-color:#dce8f4}
+.feature{display:flex;gap:11px;align-items:flex-start;min-width:0;padding:14px;border:1px solid #ffffff12;border-radius:13px;background:#ffffff04;cursor:pointer;transition:.15s}
+.feature:hover{background:#ffffff09}
+.feature:has(input:checked){border-color:#7dd3fc60;background:#7dd3fc0a}
+.feature input{appearance:none;flex-shrink:0;width:19px;height:19px;margin:2px 0 0;border:1px solid #657080;border-radius:5px;background:#222731;display:grid;place-items:center}
+.feature input:checked{background:#bfe8ff;border-color:#bfe8ff}
+.feature input:checked:after{content:"";width:5px;height:9px;border:solid #16202b;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.feature input:disabled{opacity:.75;cursor:not-allowed}
+.price{font:500 11px "JetBrains Mono",monospace;color:var(--green);white-space:nowrap}
+.info{padding:11px 12px;border:1px solid #ffffff0d;border-radius:9px;background:#0002;color:#b6c0ce;font-size:11px;line-height:1.7}
+.line{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #ffffff0d;font-size:12px}
+.line:last-child{border:0}
+.line span:first-child{min-width:0;overflow-wrap:anywhere;color:#bbc3ce}
+.line span:last-child{flex-shrink:0;font:500 11px "JetBrains Mono",monospace}
+.sticky{position:sticky;top:12px}
+.overlay{position:fixed;inset:0;z-index:50;overflow-y:auto;padding:12px;background:#0b0d11f5;backdrop-filter:blur(20px)}
+.overlay[hidden]{display:none}
+.docbox{border:1px solid var(--border);border-radius:14px;padding:16px;background:#ffffff06}
+.docbox h3{font-size:14px;font-weight:800}
+.docbox p,.docbox li{font-size:12px;line-height:1.8;color:#b3bdca}
+.docbox ul{list-style:disc;padding-left:18px;margin-top:8px}
+.warning{color:#fcd34d}
+#mobileBar{display:none}
+#feedback{overflow-wrap:anywhere}
+@media(min-width:900px){.workspace{display:grid;grid-template-columns:minmax(0,1fr) 335px;gap:18px;align-items:start}.features{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:899px){.sticky{position:static}}
+@media(max-width:767px){
+ body{padding-bottom:88px}
+ #mobileBar{display:flex;position:fixed;z-index:30;left:0;right:0;bottom:0;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#171a20f2;border-top:1px solid #ffffff18;backdrop-filter:blur(18px)}
+ #mobileBar .btn{min-width:125px}
+}
+@media(max-width:480px){.feature{padding:11px;gap:9px}.btn{padding:10px 11px}.hide-mobile{display:none}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+#printDocument{display:none}
+@page{size:A4;margin:14mm}
+@media print{
+ body{background:white!important;color:#111!important;padding:0!important}
+ body>*{display:none!important}
+ #printDocument{display:block!important;background:white!important;color:#111!important;font:10pt Arial,sans-serif;line-height:1.45}
+ #printDocument *{color:#111!important;box-shadow:none!important}
+ .phead{border-bottom:2px solid #222;padding-bottom:12px;margin-bottom:18px}
+ .pbrand{font-size:21pt;font-weight:800}
+ .psub{font-size:9pt;color:#555!important}
+ .pmeta{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}
+ .pbox{border:1px solid #ccc;padding:9px;border-radius:4px;overflow-wrap:anywhere}
+ .ptitle{font-size:17pt;font-weight:800;margin:17px 0 5px}
+ .ptable{width:100%;border-collapse:collapse;margin-top:14px}
+ .ptable th,.ptable td{padding:8px 7px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}
+ .ptable thead{display:table-header-group}
+ .ptable tr{page-break-inside:avoid;break-inside:avoid}
+ .ptable th{background:#f1f3f5!important}
+ .amount{text-align:right!important;white-space:nowrap}
+ .ptotals{width:68%;margin:15px 0 0 auto}
+ .ptotal{display:flex;justify-content:space-between;gap:10px;padding:5px 0}
+ .pgrand{border-top:2px solid #222;margin-top:6px;padding-top:10px;font-size:14pt;font-weight:800}
+ .pnotes{margin-top:20px;border-top:1px solid #ccc;padding-top:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+ .pfooter{position:fixed;bottom:-6mm;left:0;right:0;text-align:center;font-size:8pt;color:#666!important}
+}
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4b6cb7">
+<link rel="apple-touch-icon" href="icon.png"></head>
+<body>
+
+<header class="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-5">
+ <div class="flex flex-wrap items-center justify-between gap-3">
+  <div class="flex items-center gap-3">
+   <div class="glass w-11 h-11 rounded-xl grid place-items-center text-xl">⬡</div>
+   <div>
+    <div class="text-lg font-extrabold">App Master<span class="text-sky-300">.</span></div>
+    <div class="text-xs muted" id="subtitle">Configurateur de projets PWA</div>
+   </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+   <div class="flex gap-1" aria-label="Choisir le marché">
+    <button class="country active" id="frButton" type="button" aria-pressed="true">🇫🇷 FR</button>
+    <button class="country" id="dzButton" type="button" aria-pressed="false">🇩🇿 DZ</button>
+   </div>
+   <button class="btn secondary" id="docsButton" type="button">ⓘ Documentation</button>
+  </div>
+ </div>
+ <div class="mt-7 max-w-3xl">
+  <div class="label mb-2" id="marketLabel">FRANCE · TARIFS EN EUROS</div>
+  <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Ton application.<br><span class="text-slate-400">Ton prix. Tes choix.</span></h1>
+  <p class="text-sm muted leading-6 mt-3">Configure les fonctionnalités, adapte ton offre au marché choisi et prépare un devis ou un document imprimable.</p>
+ </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+ <div class="workspace">
+  <div class="space-y-4">
+   <section class="glass rounded-2xl p-4 sm:p-5">
+    <div class="label">01 / Projet</div><h2 class="text-lg font-bold mt-1 mb-4">Informations générales</h2>
+    <div class="grid sm:grid-cols-2 gap-3">
+     <label><span class="text-xs muted block mb-2">Nom du projet *</span><input id="project" class="field" placeholder="Ex. Gestion de stock" required></label>
+     <label><span class="text-xs muted block mb-2">Nom du client</span><input id="client" class="field" placeholder="Entreprise ou particulier"></label>
+     <label><span class="text-xs muted block mb-2">Émetteur / activité</span><input id="seller" class="field" placeholder="Nom commercial"></label>
+     <label><span class="text-xs muted block mb-2">E-mail ou téléphone</span><input id="contact" class="field" placeholder="Coordonnées professionnelles"></label>
+     <label><span class="text-xs muted block mb-2">Type de document</span>
+      <select id="doctype" class="field"><option value="quote">Devis estimatif</option><option value="invoice">Facture</option></select>
+     </label>
+     <label><span class="text-xs muted block mb-2">Numéro du document</span><div class="flex gap-2"><input id="docnumber" class="field mono" placeholder="DEV-2026-001"><button id="nextNumber" type="button" class="btn secondary" title="Proposer le prochain numéro" aria-label="Proposer le prochain numéro">↻</button></div></label>
+     <label><span class="text-xs muted block mb-2">Date du document</span><input id="docdate" type="date" class="field"></label>
+     <label><span class="text-xs muted block mb-2">Validité / échéance</span><input id="duedate" type="date" class="field"></label>
+    </div>
+    <div class="label mt-6 mb-3">Identification et paiement (facultatif)</div>
+    <div class="grid sm:grid-cols-2 gap-3">
+     <label><span class="text-xs muted block mb-2" id="sellerIdLabel">SIRET / n° TVA</span><input id="sellerId" class="field" placeholder="Identifiants professionnels"></label>
+     <label><span class="text-xs muted block mb-2">Adresse de l’émetteur</span><textarea id="sellerAddress" class="field" rows="2" placeholder="Adresse complète"></textarea></label>
+     <label><span class="text-xs muted block mb-2">Adresse du client</span><textarea id="clientAddress" class="field" rows="2" placeholder="Adresse complète du client"></textarea></label>
+     <label><span class="text-xs muted block mb-2">Mode de paiement</span><input id="paymentMethod" class="field" placeholder="Virement, espèces, etc."></label>
+     <label><span class="text-xs muted block mb-2">Délai de paiement</span><input id="paymentTerm" class="field" placeholder="Ex. à réception, 30 jours"></label>
+     <label id="legalMentionWrap"><span class="text-xs muted block mb-2">Mention légale TVA (modifiable)</span><input id="legalMention" class="field" value="TVA non applicable, art. 293 B du CGI"></label>
+    </div>
+    <div class="flex flex-wrap gap-2 mt-4">
+     <button class="btn secondary" id="exportJSON" type="button">↓ Exporter JSON</button>
+     <button class="btn secondary" id="importJSONButton" type="button">↑ Importer JSON</button>
+     <input id="importJSON" type="file" accept=".json,application/json" hidden>
+    </div>
+    <div class="info mt-4">Les prix sont des estimations commerciales. Pour une facture réelle, vérifie les mentions légales, ton statut et le régime fiscal applicable. Les données de ce formulaire sont sauvegardées localement sur cet appareil.</div>
+   </section>
+
+   <section class="glass rounded-2xl p-4 sm:p-5">
+    <div class="flex items-center justify-between gap-3 mb-4">
+     <div><div class="label">02 / Fonctionnalités</div><h2 class="text-lg font-bold mt-1">Construis la PWA</h2></div>
+     <span class="mono text-xs muted" id="count">1 option</span>
+    </div>
+    <div class="info mb-4">Coche uniquement les fonctions demandées. Chaque montant est un supplément de développement. Le stockage local de base est inclus.</div>
+    <div id="features" class="features grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+    <div id="dependencyWarnings" class="info mt-4" hidden></div>
+    <div class="info mt-4">imgbb et Cloudinary sont des solutions alternatives : une seule est chiffrée à la fois. Les abonnements et consommations des services externes ne sont pas inclus.</div>
+   </section>
+
+   <section class="glass rounded-2xl p-4 sm:p-5">
+    <div class="label">03 / Offre et fiscalité</div><h2 class="text-lg font-bold mt-1 mb-4">Ajustements commerciaux</h2>
+    <div class="grid sm:grid-cols-2 gap-3">
+     <label><span class="text-xs muted block mb-2">Niveau de prestation</span>
+      <select id="position" class="field"><option value="1">Standard · tarif de base</option><option value="1.2">Premium · +20 %</option><option value="1.4">Expert · +40 %</option></select>
+     </label>
+     <label><span class="text-xs muted block mb-2">Remise commerciale</span>
+      <select id="discount" class="field"><option value="0">Aucune remise</option><option value="5">5 %</option><option value="10">10 %</option><option value="15">15 %</option></select>
+     </label>
+     <label><span class="text-xs muted block mb-2">Travaux supplémentaires (<span class="currency">€</span>)</span><input id="extra" class="field mono" type="number" min="0" max="100000000" step="10" value="0"></label>
+     <label id="taxWrap"><span class="text-xs muted block mb-2">Régime fiscal / taxe</span><select id="taxMode" class="field"></select></label>
+     <label id="rateWrap" class="hidden"><span class="text-xs muted block mb-2">Taux TVA personnalisé (%)</span><input id="taxRate" class="field" type="number" min="0" max="100" step="0.5" value="19"></label>
+     <label class="sm:col-span-2"><span class="text-xs muted block mb-2">Conditions, notes et exclusions</span><textarea id="notes" rows="3" class="field" placeholder="Ex. Délai de livraison, hébergement non compris, maintenance séparée…"></textarea></label>
+    </div>
+    <p id="taxHelp" class="text-xs muted leading-5 mt-3"></p>
+   </section>
+  </div>
+
+  <aside class="sticky mt-4 lg:mt-0">
+   <section class="glass rounded-2xl p-4 sm:p-5">
+    <div class="label">Récapitulatif en direct</div>
+    <div class="mt-5"><div class="text-xs muted">Montant à payer estimé</div>
+     <div class="flex items-baseline gap-2 mt-2"><span id="total" class="text-4xl font-extrabold tracking-tight mono">99</span><span class="text-sm muted currency">€</span></div>
+     <div id="taxCaption" class="text-xs muted mt-2">Montant estimatif, hors taxes si applicable.</div>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mt-4">
+     <div class="rounded-xl p-3 bg-white/[.035] border border-white/[.06]"><div class="text-xs muted">Options payantes</div><div id="count2" class="mono text-xl font-bold mt-1">0</div></div>
+     <div class="rounded-xl p-3 bg-white/[.035] border border-white/[.06]"><div class="text-xs muted">Complexité</div><div id="complexity" class="text-sm font-bold mt-2">PWA essentielle</div></div>
+    </div>
+    <div class="mt-5 pt-4 border-t border-white/[.08]"><div class="label mb-2">Détail du calcul</div><div id="summary"></div>
+     <div class="line"><span>Sous-total après remise</span><span id="net">—</span></div>
+     <div class="line"><span id="taxLineName">TVA</span><span id="taxValue">—</span></div>
+     <div class="line font-bold"><span>Total estimé</span><span id="grand">—</span></div>
+    </div>
+    <div class="mt-5 space-y-2">
+     <button id="preview" class="btn primary w-full" type="button">▤ Imprimer / PDF</button>
+     <button id="copy" class="btn secondary w-full" type="button">▣ Copier le récapitulatif</button>
+     <button id="download" class="btn secondary w-full" type="button">↓ Télécharger en TXT</button>
+     <button id="reset" class="btn secondary w-full" type="button">Réinitialiser</button>
+    </div>
+    <p id="feedback" class="text-xs muted mt-3 min-h-5" role="status" aria-live="polite"></p>
+    <div class="info mt-3">Pour le PDF, choisis « Enregistrer au format PDF » dans le menu d'impression. Pour une imprimante Bluetooth, associe-la d'abord à ton appareil et sélectionne-la dans ce même menu.</div>
+   </section>
+   <section class="glass rounded-2xl p-4 mt-4"><div class="font-bold text-sm">Documentation tarifaire</div><p class="text-xs muted leading-5 mt-2">Exemples, niveaux de projet, choix techniques et fiscalité France / Algérie.</p><button class="btn secondary w-full mt-3" id="docsButton2" type="button">Lire la documentation</button></section>
+  </aside>
+ </div>
+ <footer class="text-center pt-9 pb-3"><div class="text-sm font-bold text-slate-300">App Master</div><div class="text-xs text-slate-600 mt-1">Configurateur de projets PWA</div><div class="mono text-[10px] tracking-widest text-slate-600 mt-4" id="footerBrand">LB <span id="footerYear"></span></div></footer>
+</main>
+
+<div id="mobileBar">
+ <div class="min-w-0"><div class="text-xs muted">Total estimé</div><div class="font-extrabold mono text-lg"><span id="mobileTotal">99</span> <span id="mobileCurrency">€</span></div></div>
+ <button id="mobilePreview" class="btn primary" type="button">Aperçu / imprimer</button>
+</div>
+
+<div id="docs" class="overlay" role="dialog" aria-modal="true" aria-labelledby="docsTitle" aria-hidden="true" hidden>
+ <div class="max-w-4xl mx-auto py-4 sm:py-8">
+  <div class="flex justify-between items-start gap-4 mb-6"><div><div class="label mb-2">Guide pratique</div><h2 id="docsTitle" class="text-2xl sm:text-3xl font-extrabold">Comprendre les tarifs</h2><p class="text-sm muted leading-6 mt-2">Les montants sont des repères commerciaux configurables, pas des prix officiels ni une étude statistique exhaustive du marché.</p></div><button id="closeDocs" class="btn secondary" type="button" aria-label="Fermer la documentation">✕</button></div>
+  <div class="grid sm:grid-cols-2 gap-3">
+   <article class="docbox"><h3>01 · PWA essentielle</h3><p id="range1" class="price mt-2"></p><ul><li>Interface responsive et formulaires simples.</li><li>Stockage local et calculs de base.</li><li>Installation possible sur l'écran d'accueil selon le navigateur.</li></ul><p class="mt-2"><strong>Exemple :</strong> outil de crédits, calculateur ou carnet de notes.</p></article>
+   <article class="docbox"><h3>02 · Sauvegarde et hors ligne</h3><p id="range2" class="price mt-2"></p><ul><li>Import/export JSON.</li><li>Cache des fichiers essentiels.</li><li>Consultation sans connexion, selon les fonctions.</li></ul><p class="mt-2"><strong>Exemple :</strong> consulter les fiches de stock dans un entrepôt.</p></article>
+   <article class="docbox"><h3>03 · PWA connectée</h3><p id="range3" class="price mt-2"></p><ul><li>Authentification et base de données cloud.</li><li>Permissions et règles de sécurité.</li><li>Gestion des erreurs et tests.</li></ul><p class="mt-2"><strong>Exemple :</strong> espace client avec commandes et produits partagés.</p></article>
+   <article class="docbox"><h3>04 · PWA avec intégrations</h3><p id="range4" class="price mt-2"></p><ul><li>Excel/CSV, hébergement d'images, notifications.</li><li>Impression et génération de documents.</li><li>Gestion des formats, erreurs et quotas API.</li></ul><p class="mt-2"><strong>Exemple :</strong> importer un catalogue Excel et notifier les commandes.</p></article>
+   <article class="docbox"><h3>05 · PWA métier</h3><p id="range5" class="price mt-2"></p><ul><li>Administration, rôles et historiques.</li><li>Statistiques et tableaux de bord.</li><li>Processus métier et tests plus poussés.</li></ul><p class="mt-2"><strong>Exemple :</strong> gestion de stock, ventes et commandes d'une équipe.</p></article>
+   <article class="docbox"><h3>06 · PWA entreprise</h3><p id="range6" class="price mt-2"></p><ul><li>Intégrations multiples et backend dédié si nécessaire.</li><li>Permissions avancées, audit, sauvegardes.</li><li>Synchronisation complexe, documentation et maintenance.</li></ul><p class="mt-2"><strong>Exemple :</strong> application interne utilisée par plusieurs services.</p></article>
+  </div>
+  <article class="docbox mt-4"><h3>Pourquoi les options coûtent-elles plus cher ?</h3><ul><li><strong>Firebase :</strong> comptes, données partagées, règles d'accès et tests de sécurité.</li><li><strong>Excel :</strong> formats variables, doublons, données incorrectes et volume des fichiers.</li><li><strong>Images / API :</strong> quotas, clés, erreurs réseau et confidentialité.</li><li><strong>Administration :</strong> rôles, filtres, actions sensibles et confirmations.</li><li><strong>Offline + synchronisation :</strong> file d'attente, reprises, doublons et conflits de données.</li><li><strong>PDF / impression :</strong> pagination, mise en page, imprimante et compatibilité.</li></ul></article>
+  <article class="docbox mt-4"><h3>Fiscalité : France et Algérie</h3><p class="mt-2">Le choix du pays adapte la devise et les tarifs de départ. Le choix du régime fiscal est indépendant du prix commercial.</p><ul><li><strong>France :</strong> le mode « sans TVA » et sa mention légale ne sont à utiliser que si les conditions légales sont remplies.</li><li><strong>Algérie :</strong> le taux normal de TVA est de 19 % et le taux réduit de 9 % pour les opérations éligibles. L'IFU est un régime fiscal distinct, pas un taux de TVA.</li><li>Le taux réduit de 9 % n'est pas un choix commercial : il doit être légalement applicable à la prestation.</li><li>Cette application ne calcule pas l'impôt IFU du prestataire et ne garantit pas la conformité juridique d'une facture.</li></ul><p class="mt-2">Sources : <a class="underline" target="_blank" rel="noopener" href="https://www.mfdgi.gov.dz/fr/professionnels/services-pro/regime-reel/la-taxe-sur-la-valeur-ajoutee">DGI — TVA</a> et <a class="underline" target="_blank" rel="noopener" href="https://www.mfdgi.gov.dz/fr/professionnels/services-pro/regime-forfaitaire-unique/ifu">DGI — IFU</a>.</p></article>
+  <article class="docbox mt-4"><h3>Limites du devis et de la facture</h3><p class="mt-2">Le document est un modèle de travail. Vérifie les identifiants, adresses, mentions, numéro d'ordre, modalités de paiement et autres informations requises selon la juridiction et le statut. Le document généré ne garantit pas à lui seul la conformité juridique.</p></article>
+  <button id="back" class="btn primary mt-5" type="button">Retour au configurateur</button>
+ </div>
+</div>
+
+<div id="printDocument">
+ <div class="phead"><div class="pbrand">App Master</div><div class="psub">Développement d'applications web progressives · PWA</div></div>
+ <div id="printContent"></div>
+ <div class="pfooter">App Master · LB <span id="printYear"></span></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "appMaster.config.v2";
+const COUNTER_KEY = "appMaster.documentCounters.v1";
+
+const featureData = [
+ {id:"local",name:"Stockage local",description:"Conserver les données sur l'appareil.",example:"Ex. : carnet de notes ou crédits.",price:[0,0]},
+ {id:"json",name:"Import / export JSON",description:"Sauvegarder et restaurer les données.",example:"Ex. : transférer une sauvegarde vers un autre appareil.",price:[45,6000]},
+ {id:"realtime",name:"Firebase Realtime Database",description:"Données cloud avec mises à jour en temps réel.",example:"Ex. : catalogue partagé entre plusieurs vendeurs.",price:[130,18000]},
+ {id:"auth",name:"Firebase Authentication",description:"Inscription, connexion et sessions utilisateurs.",example:"Ex. : espace personnel de chaque client.",price:[120,16000]},
+ {id:"firestore",name:"Cloud Firestore",description:"Base cloud organisée en collections et documents.",example:"Ex. : produits, commandes et historique.",price:[180,25000]},
+ {id:"rules",name:"Règles de sécurité Firebase",description:"Définir les droits de lecture et de modification.",example:"Ex. : chaque client ne voit que ses propres commandes.",price:[90,12000]},
+ {id:"imgbb",name:"API imgbb",description:"Héberger des images via un service externe.",example:"Ex. : photos des produits d'un catalogue.",price:[65,8000],group:"images"},
+ {id:"cloudinary",name:"Cloudinary",description:"Hébergement et traitement d'images.",example:"Ex. : redimensionner les photos d'un catalogue.",price:[110,14000],group:"images"},
+ {id:"excel",name:"Import / export Excel",description:"Importer ou générer des fichiers XLSX et CSV.",example:"Ex. : charger 500 produits depuis un tableur.",price:[130,18000]},
+ {id:"ntfy",name:"Notifications ntfy",description:"Envoyer des alertes vers un sujet ntfy.",example:"Ex. : prévenir le responsable d'une commande.",price:[75,10000]},
+ {id:"admin",name:"Page d'administration",description:"Interface de gestion réservée au responsable.",example:"Ex. : gérer produits, utilisateurs et commandes.",price:[250,35000]},
+ {id:"print",name:"Impression navigateur",description:"Mise en page optimisée pour l'impression.",example:"Ex. : imprimer une fiche ou un bon de commande.",price:[55,7500]},
+ {id:"pdf",name:"Documents PDF",description:"Produire des documents à télécharger ou imprimer.",example:"Ex. : devis, facture ou rapport PDF.",price:[75,10000]},
+ {id:"stats",name:"Statistiques",description:"Indicateurs, tableaux et graphiques.",example:"Ex. : ventes mensuelles et produits les plus vendus.",price:[150,22000]},
+ {id:"design",name:"Design premium personnalisé",description:"Identité visuelle et finitions adaptées.",example:"Ex. : logo, couleurs et icônes personnalisés.",price:[150,20000]},
+ {id:"offline",name:"Mode hors ligne",description:"Mettre en cache les ressources essentielles.",example:"Ex. : consulter des fiches sans réseau.",price:[150,20000]},
+ {id:"sync",name:"Synchronisation offline / online",description:"Mettre en attente les modifications et les synchroniser au retour du réseau.",example:"Ex. : saisir un inventaire hors ligne et le synchroniser ensuite.",price:[250,35000]}
+];
+
+let market = "FR";
+let lastFocus = null;
+let restoring = false;
+
+const basePrice = {FR:99,DZ:15000};
+const currencies = {FR:"€",DZ:"DA"};
+const numberFormat = {
+ FR:new Intl.NumberFormat("fr-FR",{maximumFractionDigits:2}),
+ DZ:new Intl.NumberFormat("fr-FR",{maximumFractionDigits:0})
+};
+
+const complexityLevels = [
+ {name:"PWA essentielle",min:0,rangeFR:"80–180 €",rangeDZ:"12 000–25 000 DA"},
+ {name:"Sauvegarde et hors ligne",minFR:80,minDZ:10000,rangeFR:"180–350 €",rangeDZ:"25 000–50 000 DA"},
+ {name:"PWA connectée",minFR:200,minDZ:25000,rangeFR:"350–650 €",rangeDZ:"50 000–100 000 DA"},
+ {name:"PWA avec intégrations",minFR:450,minDZ:55000,rangeFR:"600–1 000 €",rangeDZ:"80 000–160 000 DA"},
+ {name:"PWA métier",minFR:800,minDZ:100000,rangeFR:"1 000–2 000 €",rangeDZ:"150 000–300 000 DA"},
+ {name:"PWA entreprise",minFR:1600,minDZ:200000,rangeFR:"2 000–5 000 €+",rangeDZ:"300 000 DA+"}
+];
+
+const today = new Date();
+const isoToday = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+$("footerYear").textContent = today.getFullYear();
+$("printYear").textContent = today.getFullYear();
+$("docdate").value = isoToday;
+
+function safeStorageGet(key) {
+ try { return localStorage.getItem(key); } catch (_) { return null; }
+}
+function safeStorageSet(key,value) {
+ try { localStorage.setItem(key,value); return true; } catch (_) { return false; }
+}
+function safeStorageRemove(key) {
+ try { localStorage.removeItem(key); } catch (_) {}
+}
+function normalizeSpaces(value) {
+ return String(value).replace(/\u202F/g,"\u00A0");
+}
+function roundMoney(value) {
+ const n = Number.isFinite(Number(value)) ? Number(value) : 0;
+ if(market==="DZ") return Math.round(n/10)*10;
+ return Math.round(n*100)/100;
+}
+function money(value) {
+ return normalizeSpaces(numberFormat[market].format(roundMoney(value)))+" "+currencies[market];
+}
+function escapeHTML(value) {
+ return String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function getFeaturePrice(feature) {
+ return feature.price[market==="FR"?0:1];
+}
+function selectedFeatureIds() {
+ return [...$("features").querySelectorAll("input:checked")].map(input=>input.dataset.id);
+}
+
+function renderFeatures(ids = ["local"]) {
+ const selectedIds = new Set(ids);
+ selectedIds.add("local");
+
+ $("features").innerHTML = featureData.map(feature=>`
+  <label class="feature ${feature.id==="sync"?"sm:col-span-2":""}">
+   <input type="checkbox" data-id="${feature.id}"
+    ${selectedIds.has(feature.id)?"checked":""}
+    ${feature.id==="local"?"disabled aria-label='Stockage local inclus et obligatoire'":""}>
+   <span class="min-w-0 flex-1">
+    <span class="flex items-start justify-between gap-2">
+     <strong class="text-sm">${escapeHTML(feature.name)}</strong>
+     <span class="price">${getFeaturePrice(feature)===0?"Inclus":"+"+money(getFeaturePrice(feature))}</span>
+    </span>
+    <span class="block text-xs muted leading-5 mt-2">${escapeHTML(feature.description)}</span>
+    <span class="block text-xs text-slate-300 leading-5 mt-2">${escapeHTML(feature.example)}</span>
+   </span>
+  </label>`).join("");
+
+ $("features").querySelectorAll("input").forEach(input=>{
+  input.addEventListener("change",()=>{
+   const feature = featureData.find(item=>item.id===input.dataset.id);
+   if(input.checked && feature?.group) {
+    $("features").querySelectorAll("input").forEach(other=>{
+     const otherFeature = featureData.find(item=>item.id===other.dataset.id);
+     if(other!==input && otherFeature?.group===feature.group) other.checked=false;
+    });
+   }
+   compute();
+   saveState();
+  });
+ });
+}
+
+function setupTaxModes(preferredValue) {
+ const options = market==="FR" ? [
+  {value:"fr20",label:"TVA 20 % — régime assujetti"},
+  {value:"fr10",label:"TVA 10 % — uniquement si éligible"},
+  {value:"fr55",label:"TVA 5,5 % — uniquement si éligible"},
+  {value:"fr21",label:"TVA 2,1 % — uniquement si éligible"},
+  {value:"none",label:"Sans TVA — si légalement applicable"},
+  {value:"custom",label:"Taux personnalisé"}
+ ] : [
+  {value:"dz_ifu",label:"Algérie — IFU / facturation sans TVA"},
+  {value:"dz19",label:"Algérie — TVA 19 % (taux normal)"},
+  {value:"dz9",label:"Algérie — TVA 9 % (si éligible)"},
+  {value:"dz_exempt",label:"Algérie — exonération / franchise validée"},
+  {value:"custom",label:"Autre taux — à vérifier"}
+ ];
+
+ $("taxMode").innerHTML = options.map(option=>
+  `<option value="${option.value}">${option.label}</option>`
+ ).join("");
+
+ const defaultValue = market==="FR"?"fr20":"dz_ifu";
+ $("taxMode").value = options.some(option=>option.value===preferredValue)
+  ? preferredValue : defaultValue;
+ updateTaxHelp();
+}
+
+function taxDetails() {
+ const mode = $("taxMode").value;
+ if(mode==="fr20") return {rate:20,name:"TVA",label:"TVA française à 20 %"};
+ if(mode==="fr10") return {rate:10,name:"TVA",label:"TVA à 10 % — vérifier l'éligibilité"};
+ if(mode==="fr55") return {rate:5.5,name:"TVA",label:"TVA à 5,5 % — vérifier l'éligibilité"};
+ if(mode==="fr21") return {rate:2.1,name:"TVA",label:"TVA à 2,1 % — vérifier l'éligibilité"};
+ if(mode==="dz19") return {rate:19,name:"TVA",label:"TVA algérienne à 19 %"};
+ if(mode==="dz9") return {rate:9,name:"TVA",label:"TVA algérienne à 9 % — vérifier l'éligibilité"};
+ if(mode==="custom") return {rate:Math.max(0,Math.min(100,Number($("taxRate").value)||0)),name:"Taxe configurée",label:"Taux personnalisé à vérifier"};
+ if(mode==="dz_ifu") return {rate:0,name:"TVA",label:"IFU — TVA non ajoutée"};
+ if(mode==="dz_exempt") return {rate:0,name:"TVA",label:"Exonération / franchise — à justifier"};
+ return {rate:0,name:"TVA",label:"Sans TVA"};
+}
+
+function updateTaxHelp() {
+ const mode = $("taxMode").value;
+ $("rateWrap").classList.toggle("hidden",mode!=="custom");
+ $("legalMentionWrap").classList.toggle("hidden",!(market==="FR"&&mode==="none"));
+
+ if(market==="DZ") {
+  $("sellerIdLabel").textContent="NIF / NIS / RC / AI";
+  $("taxHelp").textContent="En Algérie, la TVA normale est de 19 % et le taux réduit de 9 % s'applique uniquement aux opérations éligibles. L'IFU est un régime distinct, pas un taux de TVA. Vérifie ton statut et les règles en vigueur avant facturation.";
+ } else {
+  $("sellerIdLabel").textContent="SIRET / n° TVA";
+  $("taxHelp").textContent="En France, le taux normal est généralement de 20 %, mais certains taux réduits et la franchise en base peuvent s'appliquer selon la prestation et le statut. La mention légale de non-application de TVA doit être vérifiée et peut être modifiée.";
+ }
+}
+
+function getComplexity(score) {
+ let selected = complexityLevels[0];
+ for(const level of complexityLevels.slice(1)) {
+  const threshold = market==="FR"?level.minFR:level.minDZ;
+  if(score>=threshold) selected=level;
+ }
+ return selected.name;
+}
+
+function updateDependencyWarnings(selectedIds) {
+ const warnings = [];
+ const hasDatabase = selectedIds.includes("firestore")||selectedIds.includes("realtime");
+ if(selectedIds.includes("rules")&&!hasDatabase) warnings.push("Les règles de sécurité sont cochées sans Firestore ni Realtime Database.");
+ if(selectedIds.includes("auth")&&!hasDatabase) warnings.push("Firebase Authentication est cochée sans base de données.");
+ if(selectedIds.includes("sync")&&!selectedIds.includes("offline")) warnings.push("La synchronisation est cochée sans le mode hors ligne.");
+ const element = $("dependencyWarnings");
+ element.hidden = warnings.length===0;
+ element.innerHTML = warnings.length
+  ? "<strong class='warning'>Vérifications recommandées</strong><ul class='list-disc pl-5 mt-2'>"+warnings.map(w=>`<li>${escapeHTML(w)}</li>`).join("")+"</ul>"
+  : "";
+}
+
+function compute() {
+ const selected = featureData.filter(feature=>selectedFeatureIds().includes(feature.id));
+ const extra = Math.max(0,Math.min(100000000,Number($("extra").value)||0));
+ const factor = Number($("position").value)||1;
+ const discountRate = (Number($("discount").value)||0)/100;
+ const modulesTotal = selected.reduce((sum,feature)=>sum+getFeaturePrice(feature),0);
+ const raw = roundMoney(basePrice[market]+modulesTotal+extra);
+ const positioned = roundMoney(raw*factor);
+ const discount = roundMoney(positioned*discountRate);
+ const net = roundMoney(Math.max(0,positioned-discount));
+ const tax = taxDetails();
+ const taxValue = roundMoney(net*tax.rate/100);
+ const total = roundMoney(net+taxValue);
+ const complexity = getComplexity(modulesTotal);
+ const paidCount = selected.filter(feature=>getFeaturePrice(feature)>0).length;
+
+ $("total").textContent=numberFormat[market].format(total);
+ $("mobileTotal").textContent=numberFormat[market].format(total);
+ $("mobileCurrency").textContent=currencies[market];
+ $("count").textContent=paidCount+" option"+(paidCount>1?"s":"");
+ $("count2").textContent=paidCount;
+ $("complexity").textContent=complexity;
+ $("net").textContent=money(net);
+ $("taxValue").textContent=money(taxValue);
+ $("taxLineName").textContent=tax.rate===0?tax.name:`${tax.name} (${normalizeSpaces(numberFormat[market].format(tax.rate))} %)`;
+ $("grand").textContent=money(total);
+ $("taxCaption").textContent=tax.rate===0?tax.label:"Taxe estimée incluse selon le taux sélectionné.";
+
+ const lines = [
+  `<div class="line"><span>Base PWA</span><span>${money(basePrice[market])}</span></div>`,
+  ...selected.filter(feature=>getFeaturePrice(feature)>0).map(feature=>
+   `<div class="line"><span>${escapeHTML(feature.name)}</span><span>${money(getFeaturePrice(feature))}</span></div>`),
+  ...(extra>0?[`<div class="line"><span>Travaux supplémentaires</span><span>${money(extra)}</span></div>`]:[]),
+  ...(factor!==1?[`<div class="line"><span>Coefficient × ${factor.toFixed(2)}</span><span>${factor>1?"+":"−"} ${money(Math.abs(positioned-raw))}</span></div>`]:[]),
+  ...(discount>0?[`<div class="line"><span>Remise</span><span>− ${money(discount)}</span></div>`]:[])
+ ];
+ $("summary").innerHTML=lines.join("");
+ updateDependencyWarnings(selected.map(feature=>feature.id));
+
+ return {selected,extra,factor,discountRate,raw,positioned,discount,net,tax,taxValue,total,complexity};
+}
+
+function docData() {
+ return {
+  project:$("project").value.trim(),
+  client:$("client").value.trim()||"Non renseigné",
+  seller:$("seller").value.trim()||"À renseigner",
+  contact:$("contact").value.trim(),
+  type:$("doctype").value,
+  number:$("docnumber").value.trim()||"À renseigner",
+  date:$("docdate").value,
+  due:$("duedate").value,
+  sellerId:$("sellerId").value.trim(),
+  sellerAddress:$("sellerAddress").value.trim(),
+  clientAddress:$("clientAddress").value.trim(),
+  paymentMethod:$("paymentMethod").value.trim(),
+  paymentTerm:$("paymentTerm").value.trim(),
+  legalMention:$("legalMention").value.trim(),
+  notes:$("notes").value.trim()
+ };
+}
+
+function dateFR(value) {
+ if(!value)return "Non renseignée";
+ const date = new Date(value+"T12:00:00");
+ return Number.isNaN(date.getTime())?value:date.toLocaleDateString("fr-FR");
+}
+
+function validateDocument() {
+ const project = $("project").value.trim();
+ if(!project) {
+  feedback("Le nom du projet est obligatoire.");
+  $("project").focus();
+  return false;
+ }
+ const docDate = $("docdate").value;
+ const dueDate = $("duedate").value;
+ if(docDate&&dueDate&&dueDate<docDate) {
+  feedback("La date d’échéance ne peut pas être antérieure à la date du document.");
+  $("duedate").focus();
+  return false;
+ }
+ if(!$("docdate").value) {
+  feedback("Renseigne la date du document.");
+  $("docdate").focus();
+  return false;
+ }
+ return true;
+}
+
+function documentHTML() {
+ const result=compute(),data=docData(),isDZ=market==="DZ";
+ const title=data.type==="invoice"?"FACTURE":"DEVIS ESTIMATIF";
+ const rows=[`<tr><td>Développement et structure PWA</td><td class="amount">${money(basePrice[market])}</td></tr>`];
+
+ result.selected.filter(feature=>getFeaturePrice(feature)>0).forEach(feature=>
+  rows.push(`<tr><td>${escapeHTML(feature.name)}</td><td class="amount">${money(getFeaturePrice(feature))}</td></tr>`));
+ if(result.extra>0) rows.push(`<tr><td>Travaux supplémentaires</td><td class="amount">${money(result.extra)}</td></tr>`);
+
+ const taxLabel=result.tax.rate>0?`${result.tax.name} (${result.tax.rate} %)`:"TVA";
+ const noVatMention=market==="FR"&&$("taxMode").value==="none"&&data.legalMention
+  ?`<p><strong>${escapeHTML(data.legalMention)}</strong></p>`:"";
+
+ return `
+ <div class="ptitle">${title}</div>
+ <div>${isDZ?"Marché algérien · Montants en dinars algériens (DA)":"Marché français · Montants en euros (€)"}</div>
+ <div class="pmeta">
+  <div class="pbox"><strong>Émetteur</strong><br>${escapeHTML(data.seller)}<br>${escapeHTML(data.contact||"Contact à renseigner")}<br>${escapeHTML(data.sellerId)}<br>${escapeHTML(data.sellerAddress).replace(/\n/g,"<br>")}</div>
+  <div class="pbox"><strong>Client</strong><br>${escapeHTML(data.client)}<br>${escapeHTML(data.clientAddress).replace(/\n/g,"<br>")}<br>Projet : ${escapeHTML(data.project)}</div>
+  <div class="pbox"><strong>Document</strong><br>Numéro : ${escapeHTML(data.number)}<br>Date : ${escapeHTML(dateFR(data.date))}<br>Validité / échéance : ${escapeHTML(dateFR(data.due))}</div>
+  <div class="pbox"><strong>Offre</strong><br>Complexité indicative : ${escapeHTML(result.complexity)}<br>Régime sélectionné : ${escapeHTML(result.tax.label)}<br>Mode de paiement : ${escapeHTML(data.paymentMethod||"Non renseigné")}<br>Délai de paiement : ${escapeHTML(data.paymentTerm||"Non renseigné")}</div>
+ </div>
+ <table class="ptable"><thead><tr><th>Prestation</th><th class="amount">Montant</th></tr></thead><tbody>${rows.join("")}</tbody></table>
+ <div class="ptotals">
+  <div class="ptotal"><span>Sous-total avant coefficient</span><span>${money(result.raw)}</span></div>
+  <div class="ptotal"><span>Coefficient commercial</span><span>× ${result.factor.toFixed(2)}</span></div>
+  <div class="ptotal"><span>Sous-total ajusté</span><span>${money(result.positioned)}</span></div>
+  ${result.discount>0?`<div class="ptotal"><span>Remise</span><span>− ${money(result.discount)}</span></div>`:""}
+  <div class="ptotal"><span>Montant après remise</span><span>${money(result.net)}</span></div>
+  <div class="ptotal"><span>${escapeHTML(taxLabel)}</span><span>${money(result.taxValue)}</span></div>
+  <div class="ptotal pgrand"><span>TOTAL ESTIMÉ</span><span>${money(result.total)}</span></div>
+ </div>
+ <div class="pnotes"><strong>Conditions et notes</strong>
+ ${escapeHTML(data.notes||"Hébergement, maintenance et abonnements de services tiers non compris sauf accord écrit.")}
+ ${noVatMention}
+ ${isDZ?"Pour le régime IFU ou une exonération, vérifier les conditions applicables et les mentions requises. Le montant ne constitue pas un calcul de l'impôt du prestataire.":"Vérifier le régime de TVA, les mentions légales et les conditions de facturation applicables."}
+ Ce document est un modèle estimatif et ne garantit pas à lui seul la conformité juridique d'une facture réelle.</div>`;
+}
+
+function buildText() {
+ const result=compute(),data=docData();
+ const lines=[
+  "APP MASTER — "+(data.type==="invoice"?"FACTURE":"DEVIS ESTIMATIF"),
+  "Marché : "+(market==="DZ"?"Algérie (DA)":"France (€)"),
+  "=".repeat(40),
+  "Projet : "+data.project,"Client : "+data.client,"Adresse client : "+data.clientAddress,
+  "Émetteur : "+data.seller,"Identifiants : "+data.sellerId,"Adresse émetteur : "+data.sellerAddress,
+  "Contact : "+(data.contact||"À renseigner"),
+  "Numéro : "+data.number,"Date : "+dateFR(data.date),"Validité / échéance : "+dateFR(data.due),
+  "Mode de paiement : "+(data.paymentMethod||"Non renseigné"),
+  "Délai de paiement : "+(data.paymentTerm||"Non renseigné"),"",
+  "Développement et structure PWA : "+money(basePrice[market]),
+  ...result.selected.filter(feature=>getFeaturePrice(feature)>0).map(feature=>feature.name+" : "+money(getFeaturePrice(feature))),
+  ...(result.extra>0?["Travaux supplémentaires : "+money(result.extra)]:[]),
+  "Sous-total avant coefficient : "+money(result.raw),
+  "Coefficient : × "+result.factor.toFixed(2),
+  "Sous-total ajusté : "+money(result.positioned),
+  ...(result.discount>0?["Remise : "+money(result.discount)]:[]),
+  "Montant après remise : "+money(result.net),
+  result.tax.label+" : "+money(result.taxValue),
+  "TOTAL ESTIMÉ : "+money(result.total),"",
+  ...(market==="FR"&&$("taxMode").value==="none"&&data.legalMention?[data.legalMention,""]:[]),
+  "Notes : "+(data.notes||"Hébergement, services tiers et maintenance exclus sauf accord écrit."),
+  "App Master · LB "+today.getFullYear()
+ ];
+ return lines.join("\n");
+}
+
+function feedback(message) {
+ $("feedback").textContent=message;
+}
+
+async function copyText(text) {
+ if(navigator.clipboard&&window.isSecureContext) {
+  await navigator.clipboard.writeText(text);
+  return;
+ }
+ const textarea=document.createElement("textarea");
+ textarea.value=text;
+ textarea.style.position="fixed";
+ textarea.style.opacity="0";
+ document.body.appendChild(textarea);
+ textarea.select();
+ const ok=document.execCommand("copy");
+ textarea.remove();
+ if(!ok) throw new Error("Copie impossible dans ce navigateur.");
+}
+
+function openPrint() {
+ if(!validateDocument()) return;
+ $("printContent").innerHTML=documentHTML();
+ window.print();
+}
+
+function nextDocumentNumber() {
+ const year=new Date().getFullYear();
+ const prefix=$("doctype").value==="invoice"?"FAC":"DEV";
+ let counters={};
+ try { counters=JSON.parse(safeStorageGet(COUNTER_KEY)||"{}")||{}; } catch (_) { counters={}; }
+ const key=`${market}-${prefix}-${year}`;
+ const next=(Number(counters[key])||0)+1;
+ counters[key]=next;
+ safeStorageSet(COUNTER_KEY,JSON.stringify(counters));
+ $("docnumber").value=`${prefix}-${year}-${String(next).padStart(3,"0")}`;
+ saveState();
+ feedback("Numéro proposé. Tu peux le modifier manuellement.");
+}
+
+function updateCountry(next,options={}) {
+ const ids=selectedFeatureIds();
+ market=next;
+ document.documentElement.lang="fr";
+ $("frButton").classList.toggle("active",market==="FR");
+ $("dzButton").classList.toggle("active",market==="DZ");
+ $("frButton").setAttribute("aria-pressed",String(market==="FR"));
+ $("dzButton").setAttribute("aria-pressed",String(market==="DZ"));
+ $("marketLabel").textContent=market==="DZ"?"ALGÉRIE · TARIFS EN DINARS ALGÉRIENS":"FRANCE · TARIFS EN EUROS";
+ $("subtitle").textContent=market==="DZ"?"Configurateur PWA · Marché algérien":"Configurateur PWA · Marché français";
+ document.querySelectorAll(".currency").forEach(element=>element.textContent=currencies[market]);
+ $("extra").step=market==="DZ"?"10":"0.01";
+ $("extra").value=options.extra!==undefined?options.extra:"0";
+ setupTaxModes(options.taxMode);
+ renderFeatures(options.featureIds||ids);
+ updateRanges();
+ compute();
+ if(!options.silent) feedback(market==="DZ"?"Tarifs algériens chargés. Vérifie le régime fiscal avant facturation.":"Tarifs français chargés.");
+ if(!restoring) saveState();
+}
+
+function updateRanges() {
+ complexityLevels.forEach((level,index)=>{
+  const value=market==="FR"?level.rangeFR:level.rangeDZ;
+  $("range"+(index+1)).textContent=value;
+ });
+}
+
+function getState() {
+ return {
+  version:2,market,
+  fields:{
+   project:$("project").value,client:$("client").value,seller:$("seller").value,contact:$("contact").value,
+   doctype:$("doctype").value,docnumber:$("docnumber").value,docdate:$("docdate").value,duedate:$("duedate").value,
+   sellerId:$("sellerId").value,sellerAddress:$("sellerAddress").value,clientAddress:$("clientAddress").value,
+   paymentMethod:$("paymentMethod").value,paymentTerm:$("paymentTerm").value,legalMention:$("legalMention").value,
+   position:$("position").value,discount:$("discount").value,extra:$("extra").value,
+   taxMode:$("taxMode").value,taxRate:$("taxRate").value,notes:$("notes").value
+  },
+  selectedIds:selectedFeatureIds()
+ };
+}
+
+function saveState() {
+ if(restoring) return;
+ const ok=safeStorageSet(STORAGE_KEY,JSON.stringify(getState()));
+ if(!ok) feedback("Sauvegarde locale indisponible : le stockage du navigateur est bloqué ou plein.");
+}
+
+function applyState(state) {
+ if(!state||typeof state!=="object") throw new Error("Fichier de configuration invalide.");
+ const fields=state.fields&&typeof state.fields==="object"?state.fields:{};
+ restoring=true;
+ const newMarket=state.market==="DZ"?"DZ":"FR";
+ market=newMarket;
+ const defaults={
+  project:"",client:"",seller:"",contact:"",doctype:"quote",docnumber:"",docdate:isoToday,duedate:"",
+  sellerId:"",sellerAddress:"",clientAddress:"",paymentMethod:"",paymentTerm:"",
+  legalMention:"TVA non applicable, art. 293 B du CGI",
+  position:"1",discount:"0",extra:"0",taxRate:"19",notes:""
+ };
+ for(const [key,value] of Object.entries(defaults)) {
+  const element=$(key);
+  if(element) element.value=fields[key]!==undefined?String(fields[key]):value;
+ }
+ if(!["quote","invoice"].includes($("doctype").value)) $("doctype").value="quote";
+ if(!["1","1.2","1.4"].includes($("position").value)) $("position").value="1";
+ if(!["0","5","10","15"].includes($("discount").value)) $("discount").value="0";
+ $("extra").value=clampNumber($("extra").value,0,100000000);
+ $("taxRate").value=clampNumber($("taxRate").value,0,100);
+ setupTaxModes(fields.taxMode);
+ updateCountry(newMarket,{silent:true,featureIds:Array.isArray(state.selectedIds)?state.selectedIds:["local"],extra:$("extra").value,taxMode:fields.taxMode});
+ $("taxRate").value=clampNumber(fields.taxRate??19,0,100);
+ updateTaxHelp();
+ compute();
+ restoring=false;
+ saveState();
+}
+
+function clampNumber(value,min,max) {
+ const parsed=Number(value);
+ if(value===""||!Number.isFinite(parsed)) return String(min);
+ return String(Math.min(max,Math.max(min,parsed)));
+}
+
+function normalizeNumericInput(element,min,max) {
+ element.value=clampNumber(element.value,min,max);
+}
+
+function openDocs() {
+ lastFocus=document.activeElement;
+ $("docs").hidden=false;
+ $("docs").setAttribute("aria-hidden","false");
+ document.body.style.overflow="hidden";
+ $("closeDocs").focus();
+}
+function closeDocs() {
+ $("docs").hidden=true;
+ $("docs").setAttribute("aria-hidden","true");
+ document.body.style.overflow="";
+ if(lastFocus&&typeof lastFocus.focus==="function") lastFocus.focus();
+}
+
+function focusTrap(event) {
+ if($("docs").hidden||event.key!=="Tab") return;
+ const focusable=[...$("docs").querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')];
+ if(!focusable.length) return;
+ const first=focusable[0],last=focusable[focusable.length-1];
+ if(event.shiftKey&&document.activeElement===first) {
+  event.preventDefault();last.focus();
+ } else if(!event.shiftKey&&document.activeElement===last) {
+  event.preventDefault();first.focus();
+ }
+}
+
+$("frButton").addEventListener("click",()=>updateCountry("FR"));
+$("dzButton").addEventListener("click",()=>updateCountry("DZ"));
+["docsButton","docsButton2"].forEach(id=>$(id).addEventListener("click",openDocs));
+["closeDocs","back"].forEach(id=>$(id).addEventListener("click",closeDocs));
+$("docs").addEventListener("click",event=>{if(event.target===$("docs"))closeDocs();});
+document.addEventListener("keydown",event=>{
+ if(event.key==="Escape"&&!$("docs").hidden) closeDocs();
+ focusTrap(event);
+});
+
+const fieldIds=[
+ "project","client","seller","contact","doctype","docnumber","docdate","duedate",
+ "sellerId","sellerAddress","clientAddress","paymentMethod","paymentTerm","legalMention",
+ "position","discount","extra","taxRate","notes"
+];
+fieldIds.forEach(id=>{
+ const element=$(id);
+ element.addEventListener("input",()=>{
+  if(id==="extra") normalizeNumericInput(element,0,100000000);
+  if(id==="taxRate") normalizeNumericInput(element,0,100);
+  if(id==="doctype") updateDocPlaceholder();
+  if(id==="taxRate") updateTaxHelp();
+  compute();
+  saveState();
+ });
+ element.addEventListener("change",()=>{
+  if(id==="docdate"||id==="duedate") {
+   if($("docdate").value&&$("duedate").value&&$("duedate").value<$("docdate").value) {
+    feedback("Attention : l’échéance est antérieure à la date du document.");
+   } else {
+    feedback("");
+   }
+  }
+  if(id==="doctype") updateDocPlaceholder();
+  if(id==="taxMode") updateTaxHelp();
+  compute();
+  saveState();
+ });
+});
+
+function updateDocPlaceholder() {
+ const invoice=$("doctype").value==="invoice";
+ $("docnumber").placeholder=`${invoice?"FAC":"DEV"}-${new Date().getFullYear()}-001`;
+}
+$("taxMode").addEventListener("change",()=>{
+ updateTaxHelp();compute();saveState();
+});
+
+$("preview").addEventListener("click",openPrint);
+$("mobilePreview").addEventListener("click",openPrint);
+
+$("copy").addEventListener("click",async()=>{
+ if(!validateDocument()) return;
+ try {await copyText(buildText());feedback("Récapitulatif copié.");}
+ catch(error){feedback(error.message||"Copie impossible.");}
+});
+
+$("download").addEventListener("click",()=>{
+ if(!validateDocument()) return;
+ const blob=new Blob(["\uFEFF",buildText()],{type:"text/plain;charset=utf-8"});
+ const url=URL.createObjectURL(blob),anchor=document.createElement("a");
+ anchor.href=url;
+ anchor.download="app-master-"+market+"-"+($("doctype").value==="invoice"?"facture":"devis")+".txt";
+ document.body.appendChild(anchor);anchor.click();anchor.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ feedback("Fichier texte téléchargé.");
+});
+
+$("nextNumber").addEventListener("click",nextDocumentNumber);
+$("doctype").addEventListener("change",updateDocPlaceholder);
+
+$("exportJSON").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(getState(),null,2)],{type:"application/json;charset=utf-8"});
+ const url=URL.createObjectURL(blob),anchor=document.createElement("a");
+ anchor.href=url;anchor.download="app-master-configuration.json";
+ document.body.appendChild(anchor);anchor.click();anchor.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ feedback("Configuration JSON exportée.");
+});
+
+$("importJSONButton").addEventListener("click",()=>$("importJSON").click());
+$("importJSON").addEventListener("change",async()=>{
+ const file=$("importJSON").files?.[0];
+ if(!file) return;
+ try {
+  const text=await file.text();
+  if(text.length>2_000_000) throw new Error("Fichier trop volumineux.");
+  const state=JSON.parse(text);
+  applyState(state);
+  feedback("Configuration importée et sauvegardée.");
+ } catch(error) {
+  feedback("Import impossible : "+(error.message||"fichier JSON invalide."));
+ } finally {
+  $("importJSON").value="";
+ }
+});
+
+$("reset").addEventListener("click",()=>{
+ if(!confirm("Réinitialiser le projet, les options, le pays et le régime fiscal ?")) return;
+ restoring=true;
+ fieldIds.forEach(id=>{
+  const element=$(id);
+  if(!element) return;
+  if(element.tagName==="SELECT") element.selectedIndex=0;
+  else if(id==="docdate") element.value=isoToday;
+  else if(id==="extra") element.value="0";
+  else if(id==="taxRate") element.value="19";
+  else if(id==="legalMention") element.value="TVA non applicable, art. 293 B du CGI";
+  else element.value="";
+ });
+ $("doctype").value="quote";
+ $("position").value="1";
+ $("discount").value="0";
+ $("duedate").value="";
+ $("taxRate").value="19";
+ updateCountry("FR",{silent:true,featureIds:["local"],extra:"0",taxMode:"fr20"});
+ restoring=false;
+ saveState();
+ feedback("Configuration réinitialisée.");
+});
+
+function initialize() {
+ const saved=safeStorageGet(STORAGE_KEY);
+ if(saved) {
+  try {
+   applyState(JSON.parse(saved));
+   feedback("Configuration précédente restaurée.");
+   return;
+  } catch(_) {
+   safeStorageRemove(STORAGE_KEY);
+  }
+ }
+ restoring=true;
+ setupTaxModes("fr20");
+ renderFeatures(["local"]);
+ updateRanges();
+ updateDocPlaceholder();
+ compute();
+ restoring=false;
+ saveState();
+}
+
+initialize();
+})();
+</script>
+
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
+</body>
+</html>
